@@ -391,8 +391,6 @@ async def birthday_check():
             log(f"Failed to send birthday message to {user_id}: {e}", level="ERROR")
 
         conn.commit()
-    except Exception as e:
-        log(f"Uncaught exception in birthday_check: {e}", "ERROR")
 
 @tasks.loop(minutes=10)
 async def heartbeat():
@@ -400,5 +398,3 @@ async def heartbeat():
 heartbeat.start()
 
 bot.run(TOKEN)
-
- 
