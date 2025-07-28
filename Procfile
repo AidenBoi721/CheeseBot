@@ -1,1 +1,1 @@
-worker: python cheesebot.py
+worker: python CheeseBot/cheesebot.py
