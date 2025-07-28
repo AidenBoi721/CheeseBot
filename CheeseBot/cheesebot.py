@@ -210,7 +210,7 @@ async def set_birthday_channel(interaction: discord.Interaction, channel: discor
 )
 async def set_birthday(interaction: discord.Interaction, month: int, day: int, user: discord.User):
     invoking_user = interaction.user
-    target_user = user
+    target_user = user or invoking_user
 
     # Restrict non-admins from setting birthdays for other users
    if target_user.id != invoking_user.id and not invoking_user.guild_permissions.administrator:
