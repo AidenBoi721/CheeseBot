@@ -81,7 +81,7 @@ async def on_ready():
     log(f"Logged in as {bot.user}", level="INFO")
     tree.add_command(debug_group, guild=discord.Object(id=GUILD_ID))
     await tree.sync(guild=discord.Object(id=GUILD_ID))
-        try:
+    try:
         birthday_check.start()
     except Exception as e:
         log(f"Failed to start birthday_check loop: {e}", "ERROR")
