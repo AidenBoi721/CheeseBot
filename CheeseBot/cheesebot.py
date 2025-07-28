@@ -81,6 +81,10 @@ async def on_ready():
     log(f"Logged in as {bot.user}", level="INFO")
     tree.add_command(debug_group, guild=discord.Object(id=GUILD_ID))
     await tree.sync(guild=discord.Object(id=GUILD_ID))
+        try:
+        birthday_check.start()
+    except Exception as e:
+        log(f"Failed to start birthday_check loop: {e}", "ERROR")
 
 class DebugCommands(app_commands.Group):
     def __init__(self):
@@ -386,7 +390,9 @@ async def birthday_check():
         except Exception as e:
             log(f"Failed to send birthday message to {user_id}: {e}", level="ERROR")
 
-    conn.commit()
+        conn.commit()
+    except Exception as e:
+        log(f"Uncaught exception in birthday_check: {e}", "ERROR")
 
 bot.run(TOKEN)
 
