@@ -99,7 +99,7 @@ class BirthdayCommands(app_commands.Group):
     def __init__(self):
         super().__init__(name="birthday", description="Birthday-related commands")
 
-birthday_group = BirthdayCommands())
+birthday_group = BirthdayCommands()
 
 @debug_group.command(name="wipe_database", description="(Dev only) Wipe all birthday records")
 async def wipe_database(interaction: discord.Interaction):
