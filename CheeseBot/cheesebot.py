@@ -217,13 +217,13 @@ async def set_birthday(interaction: discord.Interaction, month: int, day: int, u
     target_user = user or invoking_user
 
     # Restrict non-admins from setting birthdays for other users
-        if target_user.id != invoking_user.id and not invoking_user.guild_permissions.administrator:
-            await interaction.response.send_message(
-                "❌ You can only set your own birthday unless you're a server admin.",
-                ephemeral=True
-            )
-        log(f"Unauthorized birthday set attempt for {target_user.name} by {invoking_user.name}", level="WARN")
-        return
+    if target_user.id != invoking_user.id and not invoking_user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "❌ You can only set your own birthday unless you're a server admin.",
+            ephemeral=True
+        )
+    log(f"Unauthorized birthday set attempt for {target_user.name} by {invoking_user.name}", level="WARN")
+    return
 
     try:
         # Validate date
