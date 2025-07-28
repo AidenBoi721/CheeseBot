@@ -75,16 +75,16 @@ conn.commit()
 
 @bot.event
 async def on_ready():
-    await tree.sync(guild=discord.Object(id=GUILD_ID))
-    await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.watching, name="Cheese"))
-    birthday_check.start()
-    heartbeat.start()
+    await bot.change_presence(...)
+    
     log(f"Logged in as {bot.user}", level="INFO")
+
+    # Sync once only — add commands *before* syncing
     tree.add_command(debug_group, guild=discord.Object(id=GUILD_ID))
-    try:
-        birthday_check.start()
-    except Exception as e:
-        log(f"Failed to start birthday_check loop: {e}", "ERROR")
+    tree.add_command(birthday_group, guild=discord.Object(id=GUILD_ID))
+    await tree.sync(guild=discord.Object(id=GUILD_ID))  # ✅ one-time sync
+
+    birthday_check.start()
 
 class DebugCommands(app_commands.Group):
     def __init__(self):
