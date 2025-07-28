@@ -47,7 +47,6 @@ intents = discord.Intents.default()
 intents.members = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
-bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.watching, name="Cheese",))
 
 
 
@@ -77,10 +76,11 @@ conn.commit()
 @bot.event
 async def on_ready():
     await tree.sync(guild=discord.Object(id=GUILD_ID))
+    await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.watching, name="Cheese"))
     birthday_check.start()
+    heartbeat.start()
     log(f"Logged in as {bot.user}", level="INFO")
     tree.add_command(debug_group, guild=discord.Object(id=GUILD_ID))
-    await tree.sync(guild=discord.Object(id=GUILD_ID))
     try:
         birthday_check.start()
     except Exception as e:
@@ -392,9 +392,8 @@ async def birthday_check():
 
         conn.commit()
 
-@tasks.loop(minutes=10)
+@tasks.loop(minutes=5)
 async def heartbeat():
-    log("💓 Bot heartbeat OK.")
-heartbeat.start()
+    log("💓 Bot heartbeat OK.", "DEBUG")
 
 bot.run(TOKEN)
