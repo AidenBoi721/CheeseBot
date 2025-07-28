@@ -394,6 +394,11 @@ async def birthday_check():
     except Exception as e:
         log(f"Uncaught exception in birthday_check: {e}", "ERROR")
 
+@tasks.loop(minutes=10)
+async def heartbeat():
+    log("💓 Bot heartbeat OK.")
+heartbeat.start()
+
 bot.run(TOKEN)
 
  
