@@ -55,6 +55,9 @@ intents = discord.Intents.default()
 intents.members = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
+bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.watching, name="Cheese",)
+
+
 
 # Setup birthday database
 conn = sqlite3.connect("birthdays.db")
