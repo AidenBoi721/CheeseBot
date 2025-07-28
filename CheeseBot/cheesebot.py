@@ -85,9 +85,9 @@ async def on_ready():
     # Sync once only — add commands *before* syncing
     tree.add_command(debug_group, guild=discord.Object(id=GUILD_ID))
     tree.add_command(birthday_group, guild=discord.Object(id=GUILD_ID))
-    await tree.sync(guild=discord.Object(id=GUILD_ID))  # ✅ one-time sync
-
+    await tree.sync(guild=discord.Object(id=GUILD_ID))
     birthday_check.start()
+
 
 class DebugCommands(app_commands.Group):
     def __init__(self):
