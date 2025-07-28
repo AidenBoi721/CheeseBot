@@ -15,12 +15,6 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("GUILD_ID"))
 DEVELOPER_IDS = set(int(i) for i in os.getenv("DEVELOPER_IDS", "").split(",") if i.strip())
 
-# Initialize log file
-LOG_DIR = r"C:\Users\etxai\Desktop\CheeseBot\Logs"
-os.makedirs(LOG_DIR, exist_ok=True)
-SESSION_TIME = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-LOG_FILE_PATH = os.path.join(LOG_DIR, f"{SESSION_TIME}.txt")
-
 def log(message: str, level: str = "INFO"):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     COLORS = {
@@ -35,8 +29,6 @@ def log(message: str, level: str = "INFO"):
     endc = COLORS["ENDC"]
     formatted = f"[{timestamp}] [{level.upper():<7}] {message}"
     print(f"{color}{formatted}{endc}")
-    with open(LOG_FILE_PATH, "a", encoding="utf-8") as f:
-        f.write(formatted + "\n")
 
 def log_command_usage(interaction: discord.Interaction):
     user = interaction.user
