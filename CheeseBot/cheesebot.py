@@ -45,6 +45,7 @@ def get_birthday_channel(guild: discord.Guild) -> discord.TextChannel | None:
 # Setup Discord bot
 intents = discord.Intents.default()
 intents.members = True
+intents.guilds = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
