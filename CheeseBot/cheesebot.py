@@ -304,7 +304,7 @@ async def birthday_check_debug(interaction: discord.Interaction, month: int, day
         await interaction.followup.send("❌ Guild not found.", ephemeral=True)
         return
 
-    channel = discord.utils.get(guild.text_channels, name="general")
+    channel = discord.utils.get(guild.text_channels, name="logs")
     if not channel:
         await interaction.followup.send("❌ Target channel not found.", ephemeral=True)
         return
