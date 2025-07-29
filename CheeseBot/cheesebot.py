@@ -176,14 +176,13 @@ async def clear_birthday(interaction: discord.Interaction, user: Optional[discor
 @app_commands.describe(channel="The channel to send birthday messages in")
 async def set_birthday_channel(interaction: discord.Interaction, channel: discord.TextChannel):
     if not interaction.user.guild_permissions.administrator:
-        if not interaction.response.is_done():
-            await interaction.response.send_message("❌ Only administrators can set the birthday channel.", ephemeral=True)
-        else:
-            await interaction.followup.send("❌ Only administrators can set the birthday channel.", ephemeral=True)
+        await interaction.response.send_message("❌ Only administrators can set the birthday channel.", ephemeral=True)
         log(f"Unauthorized channel set attempt by {interaction.user}", "WARN")
         return
 
     try:
+        await interaction.response.defer(ephemeral=True)  # ✅ Called early to prevent timeout
+
         settings_conn = sqlite3.connect("settings.db")
         settings_cursor = settings_conn.cursor()
         settings_cursor.execute("""
@@ -192,19 +191,25 @@ async def set_birthday_channel(interaction: discord.Interaction, channel: discor
                 value TEXT NOT NULL
             )
         """)
-        settings_cursor.execute("REPLACE INTO config (key, value) VALUES (?, ?)", ("birthday_channel", str(channel.id)))
+        settings_cursor.execute(
+            "REPLACE INTO config (key, value) VALUES (?, ?)", 
+            ("birthday_channel", str(channel.id))
+        )
         settings_conn.commit()
         settings_conn.close()
 
-        await interaction.response.send_message(f"🎉 Birthday messages will now be sent in {channel.mention}.", ephemeral=True)
+        await interaction.followup.send(
+            f"🎉 Birthday messages will now be sent in {channel.mention}.", 
+            ephemeral=True
+        )
         log(f"Set birthday channel to {channel.name} ({channel.id})", "INFO")
 
     except Exception as e:
         log(f"Failed to set birthday channel: {e}", "ERROR")
-        if not interaction.response.is_done():
-            await interaction.response.send_message("❌ Failed to set birthday channel.", ephemeral=True)
-        else:
+        try:
             await interaction.followup.send("❌ Failed to set birthday channel.", ephemeral=True)
+        except Exception as fallback:
+            log(f"Followup also failed: {fallback}", "ERROR")
 
     log_command_usage(interaction)
 
