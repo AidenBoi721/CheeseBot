@@ -221,38 +221,24 @@ async def set_birthday_channel(interaction: discord.Interaction, channel: discor
     user="User whose birthday you're setting"
 )
 async def set_birthday(interaction: discord.Interaction, month: int, day: int, user: discord.User):
-    invoking_user = interaction.user
-    target_user = user or invoking_user
-
-    # Restrict non-admins from setting birthdays for other users
-    if target_user.id != invoking_user.id and not invoking_user.guild_permissions.administrator:
-        await interaction.response.send_message(
-            "❌ You can only set your own birthday unless you're a server admin.",
-            ephemeral=True
-        )
-        log(f"Unauthorized birthday set attempt for {target_user.name} by {invoking_user.name}", level="WARN")
-        return
+    target_user = user or interaction.user
 
     try:
         # Validate date
         try:
-            date(2000, month, day)
+            date(2000, month, day)  # Use fixed year for validation only
         except ValueError:
-            msg = "❌ Invalid month or day. Please ensure it's a real date."
+            msg = "❌ Invalid month or day. Please ensure it's a real calendar date."
             if not interaction.response.is_done():
                 await interaction.response.send_message(msg, ephemeral=True)
             else:
-                try:
-                    await interaction.followup.send(msg, ephemeral=True)
-                except Exception as e:
-                    log(f"Follow-up failed after invalid date: {e}", level="ERROR")
-            log(f"Invalid date given: {month:02}-{day:02} by {invoking_user}", level="WARN")
+                await interaction.followup.send(msg, ephemeral=True)
+            log(f"Invalid date provided: {month:02}-{day:02} by {interaction.user.name}", "WARN")
             return
 
         user_id = target_user.id
         username = target_user.name
 
-        # Replace or insert birthday record
         cursor.execute(
             "REPLACE INTO birthdays (user_id, username, birth_month, birth_day, notified_today) VALUES (?, ?, ?, ?, 0)",
             (user_id, username, month, day)
@@ -262,17 +248,17 @@ async def set_birthday(interaction: discord.Interaction, month: int, day: int, u
         await interaction.response.send_message(
             f"✅ Birthday set for {target_user.mention} on {month:02}-{day:02}.", ephemeral=True
         )
-        log(f"Set birthday for {username} ({user_id}): {month:02}-{day:02}", level="INFO")
+        log(f"Set birthday for {username} ({user_id}): {month:02}-{day:02}", "INFO")
 
     except Exception as e:
-        log(f"Unexpected error in set_birthday: {e}", level="ERROR")
+        log(f"Unexpected error in set_birthday: {e}", "ERROR")
         try:
             if not interaction.response.is_done():
                 await interaction.response.send_message("❌ An unexpected error occurred.", ephemeral=True)
             else:
                 await interaction.followup.send("❌ An unexpected error occurred.", ephemeral=True)
         except Exception as inner:
-            log(f"Failed to send error message: {inner}", level="ERROR")
+            log(f"Error sending followup message: {inner}", "ERROR")
 
     log_command_usage(interaction)
 
