@@ -6,14 +6,17 @@ import discord
 from discord.ext import tasks
 from discord import app_commands
 from datetime import datetime, UTC, date
+from datetime import timedelta
 from dotenv import load_dotenv
 from typing import Optional
+from time import time
 
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("GUILD_ID"))
 DEVELOPER_IDS = set(int(i) for i in os.getenv("DEVELOPER_IDS", "").split(",") if i.strip())
+BOT_START_TIME = time()
 
 def log(message: str, level: str = "INFO"):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -171,6 +174,70 @@ async def clear_birthday(interaction: discord.Interaction, user: Optional[discor
 
     log_command_usage(interaction)
 
+@debug_group.command(name="reload_db", description="(Dev only) Reloads the birthday DB connection")
+async def reload_db(interaction: discord.Interaction):
+    global conn, cursor
+    if interaction.user.id not in DEVELOPER_IDS:
+        await interaction.response.send_message("❌ Not authorized.", ephemeral=True)
+        return
+
+    try:
+        conn.close()
+        conn = sqlite3.connect("/data/birthdays.db", check_same_thread=False)
+        cursor = conn.cursor()
+        await interaction.response.send_message("🔄 Birthday database reloaded successfully.", ephemeral=True)
+        log("Birthday DB reloaded by dev command", "INFO")
+    except Exception as e:
+        log(f"DB reload failed: {e}", "ERROR")
+        await interaction.response.send_message("❌ Failed to reload DB.", ephemeral=True)
+
+@birthday_group.command(name="whohas", description="List all users with birthdays in a given month")
+@app_commands.describe(month="Month (1–12)")
+async def who_has_birthday(interaction: discord.Interaction, month: int):
+    await interaction.response.defer(ephemeral=True)
+    cursor.execute("SELECT username, birth_day FROM birthdays WHERE birth_month = ? ORDER BY birth_day", (month,))
+    rows = cursor.fetchall()
+
+    if not rows:
+        await interaction.followup.send(f"No birthdays found in month {month}.")
+        return
+
+    message = f"🎂 Birthdays in month {month:02d}:\n" + "\n".join(
+        f"- {name} on {day:02d}" for name, day in rows
+    )
+    await interaction.followup.send(f"```\n{message}\n```")
+
+@debug_group.command(name="uptime", description="(Dev only) Show how long the bot has been running")
+async def show_uptime(interaction: discord.Interaction):
+    if interaction.user.id not in DEVELOPER_IDS:
+        await interaction.response.send_message("❌ Not authorized.", ephemeral=True)
+        return
+
+    seconds = int(time() - BOT_START_TIME)
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    await interaction.response.send_message(
+        f"⏱️ Bot uptime: {hours}h {minutes}m {seconds}s", ephemeral=True
+    )
+
+@birthday_group.command(name="upcoming", description="Show the next 5 upcoming birthdays")
+async def upcoming_birthdays(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+    today = date.today()
+    cursor.execute("SELECT username, birth_month, birth_day FROM birthdays")
+    all_rows = cursor.fetchall()
+
+    def birthday_sort(row):
+        bday = date(today.year, row[1], row[2])
+        if bday < today:
+            bday = date(today.year + 1, row[1], row[2])
+        return bday
+
+    sorted_rows = sorted(all_rows, key=birthday_sort)[:5]
+
+    message = "\n".join(f"{name}: {month:02d}-{day:02d}" for name, month, day in sorted_rows)
+    await interaction.followup.send(f"🎉 Upcoming birthdays:\n```\n{message}\n```")
 
 @birthday_group.command(name="channel", description="Set the channel for birthday messages")
 @app_commands.describe(channel="The channel to send birthday messages in")
