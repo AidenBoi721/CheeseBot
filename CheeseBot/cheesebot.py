@@ -52,7 +52,7 @@ tree = app_commands.CommandTree(bot)
 
 
 # Setup birthday database
-conn = sqlite3.connect("birthdays.db")
+conn = sqlite3.connect("/data/birthdays.db", check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS birthdays (
@@ -181,9 +181,9 @@ async def set_birthday_channel(interaction: discord.Interaction, channel: discor
         return
 
     try:
-        await interaction.response.defer(ephemeral=True)  # ✅ Called early to prevent timeout
+        await interaction.response.defer(ephemeral=True)  # Called early to prevent timeout
 
-        settings_conn = sqlite3.connect("settings.db")
+        settings_conn = sqlite3.connect("/data/settings.db", check_same_thread=False)
         settings_cursor = settings_conn.cursor()
         settings_cursor.execute("""
             CREATE TABLE IF NOT EXISTS config (
