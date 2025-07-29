@@ -262,6 +262,42 @@ async def set_birthday(interaction: discord.Interaction, month: int, day: int, u
 
     log_command_usage(interaction)
 
+@debug_group.command(name="dump_birthdays", description="(Dev only) Dump all birthday data from the DB")
+async def dump_birthdays(interaction: discord.Interaction):
+    if interaction.user.id not in DEVELOPER_IDS:
+        await interaction.response.send_message("❌ You are not authorized to use this command.", ephemeral=True)
+        log(f"Unauthorized dump attempt by {interaction.user.id}", "WARN")
+        return
+
+    try:
+        cursor.execute("SELECT user_id, username, birth_month, birth_day, notified_today FROM birthdays")
+        rows = cursor.fetchall()
+
+        if not rows:
+            await interaction.response.send_message("📭 No birthdays in the database.", ephemeral=True)
+            return
+
+        output_lines = []
+        for user_id, username, month, day, flag in rows:
+            status = "✅" if flag else "❌"
+            output_lines.append(f"{username} ({user_id}): {month:02d}-{day:02d} | Notified: {status}")
+
+        full_output = "\n".join(output_lines)
+
+        # Split if over Discord's 2000-char limit
+        if len(full_output) < 1950:
+            await interaction.response.send_message(f"```\n{full_output}\n```", ephemeral=True)
+        else:
+            await interaction.response.send_message("📄 Dumping birthday DB in chunks...", ephemeral=True)
+            for i in range(0, len(full_output), 1900):
+                chunk = full_output[i:i+1900]
+                await interaction.followup.send(f"```\n{chunk}\n```", ephemeral=True)
+
+        log(f"Birthday DB dumped by {interaction.user.name}", "DEBUG")
+
+    except Exception as e:
+        log(f"Error dumping birthday DB: {e}", "ERROR")
+        await interaction.response.send_message("❌ Failed to dump birthday database.", ephemeral=True)
 
 @birthday_group.command(name="prune", description="Remove birthdays for users not in the server")
 async def prune_birthdays(interaction: discord.Interaction):
